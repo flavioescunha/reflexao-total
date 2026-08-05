@@ -474,12 +474,32 @@
         // Goes UP. dy = sy. dx = sy * tan(rR)
         ctx.beginPath(); ctx.moveTo(hitX, sy); ctx.lineTo(hitX + sy * Math.tan(rR), 0); ctx.stroke();
         
-        // Labels (angles)
+        // Arc for refracted angle
+        ctx.beginPath();
+        if (Math.abs(degR - 90) < 0.5) {
+            // Draw 90 degree symbol
+            let size = 15;
+            ctx.moveTo(hitX, sy - size);
+            ctx.lineTo(hitX + size, sy - size);
+            ctx.lineTo(hitX + size, sy);
+            ctx.strokeStyle = '#fff';
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(hitX + size / 2, sy - size / 2, 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+            ctx.fillText('r̂ = 90°', hitX + 35, sy - 20);
+        } else {
+            // Draw normal arc
+            ctx.arc(hitX, sy, 25, -Math.PI / 2, -Math.PI / 2 + rR);
+            ctx.strokeStyle = '#fff';
+            ctx.stroke();
+            ctx.fillStyle = '#fff';
+            ctx.fillText('r̂ = ' + degR.toFixed(1) + '°', hitX + 35, sy - 20);
+        }
+        
         ctx.fillStyle = '#fff'; ctx.font = '13px Inter'; ctx.textAlign = 'center';
-        // incident is bottom-left, normal is center. Text should be to the left of normal.
         ctx.fillText('î = ' + degI.toFixed(1) + '°', hitX - 35, sy + 30);
-        // refracted is top-right. Text should be to the right of normal.
-        ctx.fillText('r̂ = ' + degR.toFixed(1) + '°', hitX + 35, sy - 20);
         
         // Medium labels
         ctx.textAlign = 'left';
