@@ -389,7 +389,7 @@
         snellFormula.innerHTML = `n₁ · sen(θᵢ) = n₂ · sen(θᵣ)<br><br>${nWater.toFixed(2)} · sen(${degI}°) = 1.00 · sen(${degR}°)`;
         
         localStorage.setItem('reflexaoTotal_p2_done', 'true');
-        document.getElementById('headerNext').style.display = 'block';
+        localStorage.setItem('reflexaoTotal_p2_done', 'true');
         
         // Save to localStorage for pagina 3
         const experimentData = {
