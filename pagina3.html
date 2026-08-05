@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Página 3 - Lei de Snell">
+    <title>Página 3 — Lei de Snell e Cálculo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-deep: #050a18;
+            --bg-dark: #0a1628;
+            --surface: rgba(15, 30, 60, 0.6);
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-cyan: #00e5ff;
+            --accent-blue: #2979ff;
+            --accent-purple: #7c4dff;
+            --text-primary: #e8eaf6;
+            --text-secondary: #90a4ae;
+            --text-muted: #546e7a;
+        }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-scene { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+        .bg-orb {
+            position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.25;
+            animation: orbFloat 12s ease-in-out infinite alternate;
+        }
+        .bg-orb--1 { width: 500px; height: 500px; background: radial-gradient(circle, var(--accent-cyan), transparent 70%); top: -10%; left: -5%; animation-duration: 14s; }
+        .bg-orb--2 { width: 400px; height: 400px; background: radial-gradient(circle, var(--accent-purple), transparent 70%); bottom: -10%; right: -5%; animation-duration: 18s; animation-delay: -4s; }
+        .bg-grid {
+            position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* Header */
+        .header {
+            padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(5, 10, 24, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border);
+        }
+        .header__back, .header__next {
+            color: var(--accent-cyan); text-decoration: none; font-weight: 600; font-size: 0.9rem;
+            padding: 8px 16px; border-radius: 8px; transition: background 0.2s;
+        }
+        .header__back:hover, .header__next:hover { background: rgba(0, 229, 255, 0.1); }
+        .header__next { background: var(--accent-cyan); color: var(--bg-deep); display: none; }
+        .header__title {
+            font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* Content */
+        .container {
+            max-width: 900px; margin: 2rem auto; padding: 0 2rem; width: 100%; flex: 1; display: flex; flex-direction: column; gap: 2rem;
+        }
+
+        .card {
+            background: var(--surface); backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border); border-radius: 24px;
+            padding: 2.5rem; box-shadow: 0 4px 60px rgba(0, 0, 0, 0.4);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+
+        .card.hidden { opacity: 0; transform: translateY(20px); pointer-events: none; position: absolute; }
+        
+        .step-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 1rem; color: #fff; }
+        .step-text { font-size: 1.05rem; color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.6; }
+
+        /* Step 1 Inputs */
+        .equation-builder {
+            display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.4rem; font-family: 'Space Grotesk', sans-serif; flex-wrap: wrap; margin-bottom: 2rem;
+        }
+        .eq-input {
+            width: 80px; background: rgba(0,0,0,0.4); border: 2px solid var(--glass-border); border-radius: 10px;
+            padding: 10px; color: var(--accent-cyan); text-align: center; font-size: 1.2rem; font-weight: 700;
+            outline: none; transition: border-color 0.3s;
+        }
+        .eq-input:focus { border-color: var(--accent-cyan); }
+        .eq-input.error { border-color: #ff3344; color: #ff3344; }
+        .eq-input.success { border-color: #00e676; color: #00e676; }
+
+        /* Step 2 Algebra */
+        .algebra-container {
+            display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-family: 'Space Grotesk', sans-serif; min-height: 150px;
+        }
+        .draggable {
+            display: inline-block; padding: 10px 15px; background: rgba(41, 121, 255, 0.2);
+            border: 1px solid var(--accent-blue); border-radius: 12px; cursor: grab; user-select: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .draggable:active { cursor: grabbing; transform: scale(1.05); }
+        .dropzone {
+            display: inline-flex; min-width: 80px; min-height: 50px; border: 2px dashed rgba(255,255,255,0.3); border-radius: 12px; align-items: center; justify-content: center; transition: background 0.3s, border-color 0.3s;
+        }
+        .dropzone.highlight { background: rgba(0, 229, 255, 0.1); border-color: var(--accent-cyan); }
+        .fraction { display: flex; flex-direction: column; align-items: center; margin: 0 10px; }
+        .fraction-line { width: 100%; height: 3px; background: #fff; margin: 5px 0; border-radius: 2px; }
+        
+        /* Step 3 Calculation */
+        .calc-row { display: flex; align-items: center; justify-content: center; gap: 15px; font-size: 1.6rem; font-family: 'Space Grotesk', sans-serif; }
+        
+        /* General buttons & feedback */
+        .btn {
+            padding: 14px 24px; border: none; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan)); color: #fff; display: block; margin: 0 auto;
+        }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .feedback { text-align: center; margin-top: 15px; font-weight: 600; min-height: 24px; }
+        
+        /* Math term styling */
+        .math-term { display: inline-flex; align-items: center; gap: 5px; }
+
+        @media (max-width: 600px) {
+            .equation-builder { font-size: 1.1rem; }
+            .eq-input { width: 60px; font-size: 1rem; padding: 8px; }
+            .algebra-container { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-scene">
+    <div class="bg-orb bg-orb--1"></div>
+    <div class="bg-orb bg-orb--2"></div>
+    <div class="bg-grid"></div>
+</div>
+
+<header class="header">
+    <a href="pagina2.html" class="header__back">← Voltar</a>
+    <h1 class="header__title">Página 3 — Lei de Snell</h1>
+    <a href="pagina4.html" class="header__next" id="btnNext">Próxima →</a>
+</header>
+
+<main class="container">
+    
+    <!-- Reference Image -->
+    <section class="card" style="display:flex; flex-direction:column; align-items:center; padding: 1.5rem;">
+        <h2 class="step-title" style="font-size: 1.2rem; margin-bottom: 1rem;">Seus Dados da Experiência:</h2>
+        <canvas id="miniCanvas" width="400" height="240" style="border-radius: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border);"></canvas>
+    </section>
+
+    <!-- Step 1: Preencher a fórmula -->
+    <section class="card" id="step1">
+        <h2 class="step-title">Passo 1: Construir a Equação</h2>
+        <p class="step-text">
+            Com base no que você mediu na página anterior, preencha a Lei de Snell.<br>
+            A fórmula é: <strong>n₁ · sen(θᵢ) = n₂ · sen(θᵣ)</strong><br>
+            <em>Dica: O meio 1 é a água (onde o laser estava) e o meio 2 é o ar (para onde a luz refratou). Você não sabe o n da água, então use "n" ou "?". O n do ar é 1,00.</em>
+        </p>
+
+        <div class="equation-builder">
+            <input type="text" id="in_n1" class="eq-input" placeholder="n₁" autocomplete="off">
+            <span>· sen(</span>
+            <input type="text" id="in_angI" class="eq-input" placeholder="θᵢ" autocomplete="off">
+            <span>°) = </span>
+            <input type="text" id="in_n2" class="eq-input" placeholder="n₂" autocomplete="off">
+            <span>· sen(</span>
+            <input type="text" id="in_angR" class="eq-input" placeholder="θᵣ" autocomplete="off">
+            <span>°)</span>
+        </div>
+
+        <button class="btn" id="btnStep1">Verificar Equação</button>
+        <div class="feedback" id="fbStep1"></div>
+    </section>
+
+    <!-- Step 2: Isolamento (Álgebra) -->
+    <section class="card hidden" id="step2" style="position:relative; opacity:0; pointer-events:none;">
+        <h2 class="step-title">Passo 2: Isolar a incógnita</h2>
+        <p class="step-text">
+            Para descobrir o índice de refração da água (<strong style="color:var(--accent-cyan)">n</strong>), você precisa isolá-lo de um lado da igualdade.<br>
+            Arraste o termo apropriado para o outro lado da equação (ele passará dividindo!).
+        </p>
+
+        <div class="algebra-container" id="algebraZone">
+            <div class="math-term">
+                <span style="color:var(--accent-cyan); margin-right:5px; font-weight: bold;">n</span>
+                <span>·</span>
+                <div class="draggable" id="dragTerm" draggable="true" style="margin-left:5px;">sen(<span id="val_i"></span>°)</div>
+            </div>
+            <span style="margin: 0 20px;">=</span>
+            <div class="math-term">
+                <div class="fraction">
+                    <div style="padding: 5px;">1,00 · sen(<span id="val_r"></span>°)</div>
+                    <div class="fraction-line" id="fracLine" style="display:none;"></div>
+                    <div class="dropzone" id="dropArea">Arraste para cá</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="feedback" id="fbStep2" style="margin-top: 30px;"></div>
+    </section>
+
+    <!-- Step 3: Cálculo Final -->
+    <section class="card hidden" id="step3" style="position:relative; opacity:0; pointer-events:none;">
+        <h2 class="step-title">Passo 3: Calcule o Resultado!</h2>
+        <p class="step-text">
+            Agora pegue uma calculadora e resolva a conta!<br>
+            Lembre-se de configurar sua calculadora para <strong>Graus (Deg)</strong>.<br>
+            Insira o valor do índice de refração da água com 2 casas decimais.
+        </p>
+
+        <div class="calc-row">
+            <span style="color:var(--accent-cyan); font-weight: bold;">n = </span>
+            <input type="number" id="in_finalN" class="eq-input" placeholder="?" step="0.01" style="width: 120px;">
+        </div>
+
+        <button class="btn" id="btnStep3" style="margin-top: 25px;">Verificar Resultado</button>
+        <div class="feedback" id="fbStep3"></div>
+    </section>
+
+</main>
+
+<script>
+    if (!localStorage.getItem('reflexaoTotal_p2_done')) {
+        window.location.href = 'pagina2.html';
+    }
+
+    function registrarErro(codigo) {
+        let erros = JSON.parse(localStorage.getItem('reflexaoTotal_erros') || '[]');
+        if (!erros.includes(codigo)) {
+            erros.push(codigo);
+            localStorage.setItem('reflexaoTotal_erros', JSON.stringify(erros));
+        }
+    }
+    // Load Data
+    const expDataStr = localStorage.getItem('reflexaoTotal_exp');
+    let nWater, degI, degR;
+    
+    if (expDataStr) {
+        const expData = JSON.parse(expDataStr);
+        nWater = parseFloat(expData.nWater);
+        degI = parseFloat(expData.degI);
+        degR = parseFloat(expData.degR);
+    } else {
+        // Fallback for testing directly
+        nWater = 1.33; degI = 35.0; degR = 49.7;
+    }
+
+    // Step 1 Logic
+    const in_n1 = document.getElementById('in_n1');
+    const in_angI = document.getElementById('in_angI');
+    const in_n2 = document.getElementById('in_n2');
+    const in_angR = document.getElementById('in_angR');
+    const fbStep1 = document.getElementById('fbStep1');
+    const btnStep1 = document.getElementById('btnStep1');
+
+    btnStep1.addEventListener('click', () => {
+        let isCorrect = true;
+        
+        // n1 is water (since laser is submerged). Student should type "?" or "n" or "n2" etc
+        let v_n1 = in_n1.value.trim().toLowerCase();
+        if (v_n1 === '?' || v_n1 === 'n' || v_n1 === 'n1' || v_n1 === 'x' || v_n1 === 'n2') {
+            in_n1.classList.add('success'); in_n1.classList.remove('error');
+        } else {
+            in_n1.classList.add('error'); isCorrect = false;
+        }
+
+        // angI is the angle of incidence
+        let v_angI = parseFloat(in_angI.value.replace(',', '.'));
+        if (Math.abs(v_angI - degI) <= 1.0) {
+            in_angI.classList.add('success'); in_angI.classList.remove('error');
+        } else {
+            in_angI.classList.add('error'); isCorrect = false;
+        }
+
+        // n2 is air (1.00)
+        let v_n2 = parseFloat(in_n2.value.replace(',', '.'));
+        if (v_n2 === 1 || v_n2 === 1.0) {
+            in_n2.classList.add('success'); in_n2.classList.remove('error');
+        } else {
+            in_n2.classList.add('error'); isCorrect = false;
+        }
+
+        // angR is the angle of refraction
+        let v_angR = parseFloat(in_angR.value.replace(',', '.'));
+        if (Math.abs(v_angR - degR) <= 1.0) {
+            in_angR.classList.add('success'); in_angR.classList.remove('error');
+        } else {
+            in_angR.classList.add('error'); isCorrect = false;
+        }
+
+        if (isCorrect) {
+            fbStep1.innerText = 'Excelente! Você montou a equação corretamente.';
+            fbStep1.style.color = '#00e676';
+            btnStep1.style.display = 'none';
+            
+            // Setup Step 2
+            document.getElementById('val_i').innerText = degI.toFixed(1);
+            document.getElementById('val_r').innerText = degR.toFixed(1);
+            
+            // Reveal Step 2
+            const step2 = document.getElementById('step2');
+            step2.classList.remove('hidden');
+            step2.style.position = 'relative';
+            step2.style.pointerEvents = 'auto';
+            setTimeout(() => step2.style.opacity = '1', 50);
+        } else {
+            fbStep1.innerText = 'Alguns valores estão incorretos. Lembre-se: O laser (meio 1) estava na água. O meio 2 era o ar (n = 1).';
+            fbStep1.style.color = '#ff3344';
+            registrarErro('err_lei_snell');
+            setTimeout(()=> { fbStep1.innerText = ''; }, 4000);
+        }
+    });
+
+    // Step 2 Logic (Drag & Drop)
+    const dragTerm = document.getElementById('dragTerm');
+    const dropArea = document.getElementById('dropArea');
+    const fracLine = document.getElementById('fracLine');
+    const fbStep2 = document.getElementById('fbStep2');
+
+    // For touch devices support
+    let draggedElement = null;
+
+    dragTerm.addEventListener('dragstart', (e) => {
+        draggedElement = dragTerm;
+        e.dataTransfer.setData('text/plain', 'term');
+        setTimeout(() => dragTerm.style.opacity = '0.5', 0);
+    });
+
+    dragTerm.addEventListener('dragend', () => {
+        dragTerm.style.opacity = '1';
+    });
+
+    dropArea.addEventListener('dragover', (e) => {
+        e.preventDefault(); // necessary to allow drop
+        dropArea.classList.add('highlight');
+    });
+
+    dropArea.addEventListener('dragleave', () => {
+        dropArea.classList.remove('highlight');
+    });
+
+    dropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropArea.classList.remove('highlight');
+        if (e.dataTransfer.getData('text/plain') === 'term') {
+            handleDropSuccess();
+        }
+    });
+
+    // Touch support mapping to drag/drop behavior
+    dragTerm.addEventListener('touchstart', (e) => {
+        draggedElement = dragTerm;
+        dragTerm.style.opacity = '0.7';
+    }, {passive:true});
+
+    dragTerm.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        let touch = e.touches[0];
+        dragTerm.style.position = 'fixed';
+        dragTerm.style.left = (touch.clientX - dragTerm.offsetWidth/2) + 'px';
+        dragTerm.style.top = (touch.clientY - dragTerm.offsetHeight/2) + 'px';
+        dragTerm.style.zIndex = '1000';
+    }, {passive:false});
+
+    dragTerm.addEventListener('touchend', (e) => {
+        let touch = e.changedTouches[0];
+        dragTerm.style.position = 'static';
+        dragTerm.style.opacity = '1';
+        
+        let target = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (target === dropArea || dropArea.contains(target)) {
+            handleDropSuccess();
+        }
+    });
+
+    function handleDropSuccess() {
+        // Manipulate DOM to put dragTerm inside dropArea
+        dropArea.innerHTML = '';
+        dragTerm.style.margin = '0';
+        dragTerm.style.background = 'transparent';
+        dragTerm.style.border = 'none';
+        dragTerm.draggable = false;
+        dropArea.appendChild(dragTerm);
+        dropArea.style.border = 'none';
+        
+        // Show fraction line
+        fracLine.style.display = 'block';
+
+        // Clean up the left side (remove the dot)
+        const leftSide = document.querySelector('#step2 .math-term');
+        leftSide.innerHTML = '<span style="color:var(--accent-cyan); font-weight: bold; font-size: 2rem;">n</span>';
+
+        fbStep2.innerText = 'Perfeito! O termo "sen(θᵢ)" que estava multiplicando, passou dividindo.';
+        fbStep2.style.color = '#00e676';
+
+        // Reveal Step 3
+        const step3 = document.getElementById('step3');
+        step3.classList.remove('hidden');
+        step3.style.position = 'relative';
+        step3.style.pointerEvents = 'auto';
+        setTimeout(() => step3.style.opacity = '1', 1000);
+    }
+
+    // Step 3 Logic
+    const in_finalN = document.getElementById('in_finalN');
+    const btnStep3 = document.getElementById('btnStep3');
+    const fbStep3 = document.getElementById('fbStep3');
+    const btnNext = document.getElementById('btnNext');
+
+    btnStep3.addEventListener('click', () => {
+        let v_n = parseFloat(in_finalN.value.replace(',', '.'));
+        if (isNaN(v_n)) {
+            fbStep3.innerText = 'Digite um número válido.';
+            fbStep3.style.color = '#ffab00';
+            return;
+        }
+
+        // Compare with nWater (+- 0.02 tolerance)
+        if (Math.abs(v_n - nWater) <= 0.02) {
+            in_finalN.classList.add('success');
+            in_finalN.classList.remove('error');
+            fbStep3.innerText = `Sensacional! O índice de refração da água do seu aquário era exatamente ${nWater}!`;
+            document.getElementById('fbStep3').style.color = '#00e676';
+            document.getElementById('btnStep3').style.display = 'none';
+            document.getElementById('btnNext').style.display = 'block';
+            localStorage.setItem('reflexaoTotal_p3_done', 'true');
+        } else {
+            in_finalN.classList.add('error');
+            fbStep3.innerText = 'Valor incorreto. Calcule: sen('+degR.toFixed(1)+'°) ÷ sen('+degI.toFixed(1)+'°).';
+            fbStep3.style.color = '#ff3344';
+            registrarErro('err_calculo_n');
+        }
+    });
+
+    // Render Mini Canvas
+    function drawMiniCanvas() {
+        const c = document.getElementById('miniCanvas');
+        if (!c) return;
+        const ctx = c.getContext('2d');
+        const cw = c.width;
+        const ch = c.height;
+        const sy = ch * 0.45;
+        
+        // Draw tank
+        ctx.fillStyle = 'rgba(0, 150, 255, 0.2)'; ctx.fillRect(0, sy, cw, ch - sy);
+        ctx.strokeStyle = 'rgba(0, 229, 255, 0.5)'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(cw, sy); ctx.stroke();
+        
+        // We set hitX at center
+        let hitX = cw / 2; 
+        let rI = degI * Math.PI / 180;
+        let rR = degR * Math.PI / 180;
+        
+        // Pivot point of laser
+        let pivotY = ch - 20;
+        // distY = pivotY - sy. dx = distY * tan(rI)
+        let pivotX = hitX - (pivotY - sy) * Math.tan(rI);
+        
+        // Normal
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.setLineDash([5,5]);
+        ctx.beginPath(); ctx.moveTo(hitX, 10); ctx.lineTo(hitX, ch-10); ctx.stroke(); ctx.setLineDash([]);
+        
+        // Rays
+        ctx.strokeStyle = '#ff3344'; ctx.lineWidth = 2.5;
+        // Incident
+        ctx.beginPath(); ctx.moveTo(pivotX, pivotY); ctx.lineTo(hitX, sy); ctx.stroke();
+        // Refracted
+        // Goes UP. dy = sy. dx = sy * tan(rR)
+        ctx.beginPath(); ctx.moveTo(hitX, sy); ctx.lineTo(hitX + sy * Math.tan(rR), 0); ctx.stroke();
+        
+        // Labels (angles)
+        ctx.fillStyle = '#fff'; ctx.font = '13px Inter'; ctx.textAlign = 'center';
+        // incident is bottom-left, normal is center. Text should be to the left of normal.
+        ctx.fillText('î = ' + degI.toFixed(1) + '°', hitX - 35, sy + 30);
+        // refracted is top-right. Text should be to the right of normal.
+        ctx.fillText('r̂ = ' + degR.toFixed(1) + '°', hitX + 35, sy - 20);
+        
+        // Medium labels
+        ctx.textAlign = 'left';
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fillText('Ar (n=1,00)', 15, 25);
+        ctx.fillText('Água (n=?)', 15, ch - 15);
+    }
+    drawMiniCanvas();
+
+</script>
+</body>
+</html>

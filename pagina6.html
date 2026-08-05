@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Página 6 - Conclusão da Simulação">
+    <title>Conclusão — Reflexão Total</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-deep: #050a18;
+            --surface: rgba(15, 30, 60, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-cyan: #00e5ff;
+            --accent-blue: #2979ff;
+            --accent-purple: #7c4dff;
+            --accent-amber: #ffab00;
+            --accent-red: #ff3344;
+            --text-primary: #e8eaf6;
+            --text-secondary: #90a4ae;
+        }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            align-items: center;
+        }
+
+        /* Animated Background */
+        .bg-scene { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+        .bg-orb {
+            position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.25;
+            animation: orbFloat 12s ease-in-out infinite alternate;
+        }
+        .bg-orb--1 { width: 500px; height: 500px; background: radial-gradient(circle, var(--accent-blue), transparent 70%); top: -10%; left: -5%; animation-duration: 14s; }
+        .bg-orb--2 { width: 400px; height: 400px; background: radial-gradient(circle, var(--accent-cyan), transparent 70%); bottom: -10%; right: -5%; animation-duration: 18s; animation-delay: -4s; }
+        .bg-grid {
+            position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* Container & Cards */
+        .container { max-width: 800px; margin: 4rem auto; padding: 0 2rem; width: 100%; z-index: 10; }
+        .card {
+            background: var(--surface); backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border); border-radius: 24px;
+            padding: 3rem; box-shadow: 0 4px 60px rgba(0, 0, 0, 0.4);
+            text-align: center; margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease forwards;
+        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .title { font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; color: #fff; }
+        .subtitle { font-size: 1.2rem; color: var(--accent-cyan); margin-bottom: 2rem; }
+        
+        .hero-icon { font-size: 5rem; margin-bottom: 1rem; text-shadow: 0 0 20px rgba(0,229,255,0.5); }
+
+        /* Error Concepts Box */
+        .error-box {
+            background: rgba(255, 51, 68, 0.05); border: 1px solid rgba(255, 51, 68, 0.3);
+            border-radius: 16px; padding: 2rem; text-align: left; margin-top: 2rem;
+            display: none; /* hidden by default */
+        }
+        .error-box-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; color: var(--accent-red); font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; }
+        .error-instruction { font-size: 1.05rem; color: var(--text-primary); margin-bottom: 1.5rem; font-weight: 600; line-height: 1.5; }
+        
+        .error-list { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 2rem; }
+        .error-list li {
+            position: relative; padding-left: 30px; line-height: 1.5; color: var(--text-secondary);
+        }
+        .error-list li::before {
+            content: '📌'; position: absolute; left: 0; top: 0px; font-size: 1.1rem;
+        }
+
+        .diagram-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;
+        }
+        .diagram-card {
+            background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 12px;
+            padding: 1rem; text-align: center; display: flex; flex-direction: column; align-items: center;
+        }
+        .diagram-title {
+            color: var(--accent-cyan); font-family: 'Space Grotesk', sans-serif; font-size: 1rem; margin-bottom: 10px; font-weight: 600;
+        }
+
+        /* Confetti */
+        .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 100; overflow: hidden; }
+        .confetti { position: absolute; width: 10px; height: 10px; opacity: 0; }
+    </style>
+</head>
+<body>
+
+<div class="bg-scene">
+    <div class="bg-orb bg-orb--1"></div>
+    <div class="bg-orb bg-orb--2"></div>
+    <div class="bg-grid"></div>
+</div>
+<div class="confetti-container" id="confettiContainer"></div>
+
+<main class="container">
+    <section class="card">
+        <div class="hero-icon">🏆</div>
+        <h1 class="title">Simulação Concluída!</h1>
+        <p class="subtitle" id="studentName">Parabéns, [Aluno]!</p>
+        <p style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6;">
+            Você finalizou com sucesso a exploração sobre o Fenômeno da Refração e da Reflexão Total.
+            Esperamos que agora a Lei de Snell e a física por trás dos feixes de luz façam muito mais sentido!
+        </p>
+
+        <!-- Real World Example -->
+        <div style="margin-top: 3rem; background: rgba(0,0,0,0.3); border-radius: 16px; border: 1px solid var(--glass-border); overflow: hidden; display: flex; flex-direction: column; text-align: left;">
+            <div style="background: rgba(0, 229, 255, 0.1); padding: 1rem 1.5rem; border-bottom: 1px solid var(--glass-border);">
+                <h3 style="color: var(--accent-cyan); font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem;">🌍 A Física no Mundo Real</h3>
+            </div>
+            <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; align-items: center;">
+                <img src="reflexao_cachorro.jpg" alt="Reflexão Total na Piscina" style="width: 100%; max-width: 600px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                <p style="color: var(--text-primary); font-size: 1.05rem; line-height: 1.6; max-width: 600px;">
+                    Lembra do <strong>Ângulo Limite</strong> e da <strong>Reflexão Total</strong>? 
+                    Na vida real, se você estiver embaixo d'água e olhar para a superfície num ângulo muito raso (maior que o limite), a água funciona como um espelho perfeito!<br><br>
+                    É por isso que, nesta foto, a superfície da piscina reflete as pernas do cachorro como se houvesse um espelho no teto. Tudo graças à Física que você acabou de calcular!
+                </p>
+            </div>
+        </div>
+        
+        <div class="error-box" id="errorBox">
+            <div class="error-box-header">
+                ⚠️ Atenção aos Conceitos!
+            </div>
+            <p class="error-instruction">
+                Nosso sistema registrou que você teve dificuldades em alguns momentos da simulação. 
+                Por favor, <strong>copie os conceitos abaixo no seu caderno</strong> para fixar o aprendizado:
+            </p>
+            <ul class="error-list" id="errorList">
+                <!-- Erros inseridos dinamicamente aqui -->
+            </ul>
+            <p class="error-instruction" id="diagramInstruction" style="display:none; color: var(--accent-amber); font-size:1rem;">
+                ✍️ Ilustrações Recomendadas para Cópia:
+            </p>
+            <div class="diagram-grid" id="diagramGrid">
+                <!-- Diagramas injetados aqui -->
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    if (!localStorage.getItem('reflexaoTotal_p5_done')) {
+        window.location.href = 'pagina5.html';
+    }
+
+    // Load student name
+    const alunoStr = localStorage.getItem('reflexaoTotal_aluno');
+    if (alunoStr) {
+        const aluno = JSON.parse(alunoStr);
+        document.getElementById('studentName').innerText = `Parabéns, ${aluno.name}!`;
+    }
+
+    // Mapping Error Codes to Concepts
+    const conceptsMap = {
+        'err_medida': 'Na medição com transferidor, deve-se alinhar sempre a linha de 0° com a Reta Normal.',
+        'err_setores': 'O ângulo de incidência e o ângulo de refração são sempre medidos em relação à Reta Normal, e não em relação à superfície.',
+        'err_lei_snell': 'Na Lei de Snell, o meio 1 é sempre aquele de onde a luz parte, e o meio 2 é para onde a luz vai.',
+        'err_calculo_n': 'Na aplicação da Lei de Snell, manipule a equação com cuidado isolando corretamente a variável.',
+        'err_q1': 'O valor máximo possível para o ângulo de refração (antes da luz deixar de cruzar o meio) é de 90°.',
+        'err_q2': 'O ângulo de incidência exato que gera uma refração de 90° é chamado de Ângulo Limite.',
+        'err_q3': 'Se o ângulo de incidência for maior do que o Ângulo Limite, a luz não refrata e ocorre a Reflexão Total.',
+        'err_q4': 'Mesmo quando ocorre a refração normal, uma pequena parcela da energia da luz sofre reflexão (Reflexão Parcial).',
+        'err_q5': 'Quando ocorre Reflexão Total, 100% da luz é refletida e não há raio refratado.',
+        'err_pag5_s1': 'Na situação exata do limite, o ângulo de incidência é o próprio L, e o ângulo de refração é obrigatoriamente 90°.',
+        'err_pag5_s2': 'O seno do ângulo de 90° tem o valor exato de 1.',
+        'err_pag5_s4': 'O seno do ângulo limite para a luz passando para o ar é igual a 1 dividido pelo índice do meio incidente.',
+        'err_pag5_s5': 'Para encontrar um ângulo a partir do valor do seu seno, utilizamos a função matemática inversa sen⁻¹ (ou arco seno).'
+    };
+
+    const imageGroups = {
+        'err_medida': 'angulos', 'err_setores': 'angulos',
+        'err_lei_snell': 'formula', 'err_calculo_n': 'formula',
+        'err_q1': 'limite', 'err_q2': 'limite', 'err_pag5_s1': 'limite', 'err_pag5_s2': 'limite', 'err_pag5_s4': 'limite', 'err_pag5_s5': 'limite',
+        'err_q4': 'parcial',
+        'err_q3': 'total', 'err_q5': 'total'
+    };
+
+    const triggeredGroups = new Set();
+
+    // Load Errors
+    const errosStr = localStorage.getItem('reflexaoTotal_erros');
+    if (errosStr) {
+        const errosList = JSON.parse(errosStr);
+        if (errosList.length > 0) {
+            const ul = document.getElementById('errorList');
+            let hasValidErrors = false;
+            
+            errosList.forEach(codigo => {
+                if (conceptsMap[codigo]) {
+                    hasValidErrors = true;
+                    let li = document.createElement('li');
+                    li.innerText = conceptsMap[codigo];
+                    ul.appendChild(li);
+                    
+                    if (imageGroups[codigo]) triggeredGroups.add(imageGroups[codigo]);
+                }
+            });
+
+            if (hasValidErrors) {
+                document.getElementById('errorBox').style.display = 'block';
+                if (triggeredGroups.size > 0) renderDiagrams();
+            }
+        }
+    }
+
+    function renderDiagrams() {
+        document.getElementById('diagramInstruction').style.display = 'block';
+        const grid = document.getElementById('diagramGrid');
+        
+        triggeredGroups.forEach(group => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'diagram-card';
+            
+            const title = document.createElement('div');
+            title.className = 'diagram-title';
+            
+            const c = document.createElement('canvas');
+            c.width = 250; c.height = 180;
+            c.style.borderRadius = '8px'; c.style.background = 'rgba(0,0,0,0.5)';
+            
+            wrapper.appendChild(title);
+            wrapper.appendChild(c);
+            grid.appendChild(wrapper);
+            
+            const ctx = c.getContext('2d');
+            const cw = c.width; const ch = c.height; const sy = ch/2;
+            
+            // Common setup
+            ctx.fillStyle = 'rgba(0, 150, 255, 0.2)'; ctx.fillRect(0, sy, cw, ch-sy);
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.5)'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(cw, sy); ctx.stroke();
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.setLineDash([4,4]);
+            ctx.beginPath(); ctx.moveTo(cw/2, 10); ctx.lineTo(cw/2, ch-10); ctx.stroke(); ctx.setLineDash([]);
+            
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            
+            let hx = cw/2;
+            
+            if (group === 'angulos') {
+                title.innerText = "Ângulos em Relação à Normal";
+                ctx.strokeStyle = '#ff3344'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(hx - 50, ch - 20); ctx.lineTo(hx, sy); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(hx, sy); ctx.lineTo(hx + 60, 20); ctx.stroke();
+                
+                // Arcs
+                ctx.beginPath(); ctx.arc(hx, sy, 30, Math.PI/2, Math.atan2(ch-20-sy, -50)); ctx.strokeStyle = '#ffab00'; ctx.stroke();
+                ctx.fillStyle = '#ffab00'; ctx.font = '14px Inter'; ctx.fillText("î", hx - 15, sy + 40);
+                
+                ctx.beginPath(); ctx.arc(hx, sy, 30, Math.atan2(-sy + 20, 60), -Math.PI/2); ctx.strokeStyle = '#00e676'; ctx.stroke();
+                ctx.fillStyle = '#00e676'; ctx.fillText("r̂", hx + 18, sy - 38);
+                
+            } else if (group === 'formula') {
+                title.innerText = "Lei de Snell (Álgebra)";
+                ctx.clearRect(0, 0, cw, ch);
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Inter';
+                ctx.fillText("n₁ · sen(î) = n₂ · sen(r̂)", cw/2, sy - 20);
+                ctx.fillStyle = '#00e5ff'; ctx.font = '12px Inter';
+                ctx.fillText("↑", cw/2 - 40, sy); ctx.fillText("Meio de Origem", cw/2 - 40, sy + 15);
+                ctx.fillStyle = '#7c4dff';
+                ctx.fillText("↑", cw/2 + 45, sy); ctx.fillText("Meio de Destino", cw/2 + 45, sy + 15);
+                
+            } else if (group === 'limite') {
+                title.innerText = "Ângulo Limite";
+                ctx.strokeStyle = '#ff3344'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(hx - 50, ch - 20); ctx.lineTo(hx, sy); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(hx, sy); ctx.lineTo(cw, sy); ctx.lineWidth = 3; ctx.stroke();
+                
+                ctx.beginPath(); ctx.arc(hx, sy, 25, Math.PI/2, Math.atan2(ch-20-sy, -50)); ctx.strokeStyle = '#ffab00'; ctx.lineWidth = 1.5; ctx.stroke();
+                ctx.fillStyle = '#ffab00'; ctx.font = '14px Inter'; ctx.fillText("L", hx - 15, sy + 35);
+                ctx.fillStyle = '#fff'; ctx.fillText("90°", hx + 30, sy - 12);
+                
+            } else if (group === 'parcial') {
+                title.innerText = "Reflexão Parcial";
+                ctx.strokeStyle = '#ff3344'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(hx - 50, ch - 20); ctx.lineTo(hx, sy); ctx.stroke(); // inc
+                ctx.beginPath(); ctx.moveTo(hx, sy); ctx.lineTo(hx + 60, 20); ctx.stroke(); // ref
+                
+                ctx.strokeStyle = 'rgba(255, 51, 68, 0.4)'; ctx.setLineDash([3,3]);
+                ctx.beginPath(); ctx.moveTo(hx, sy); ctx.lineTo(hx + 50, ch - 20); ctx.stroke(); ctx.setLineDash([]);
+                ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.font = '11px Inter'; ctx.fillText("Parcial", hx + 40, ch - 10);
+                
+            } else if (group === 'total') {
+                title.innerText = "Reflexão Total";
+                ctx.strokeStyle = '#ff3344'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(hx - 70, ch - 20); ctx.lineTo(hx, sy); ctx.stroke(); // inc
+                ctx.beginPath(); ctx.moveTo(hx, sy); ctx.lineTo(hx + 70, ch - 20); ctx.stroke(); // total refl
+                
+                ctx.beginPath(); ctx.arc(hx, sy, 30, Math.PI/2, Math.atan2(ch-20-sy, -70)); ctx.strokeStyle = '#ffab00'; ctx.lineWidth = 1.5; ctx.stroke();
+                ctx.fillStyle = '#ffab00'; ctx.font = '12px Inter'; ctx.fillText("> L", hx - 15, sy + 40);
+                ctx.fillStyle = '#fff'; ctx.fillText("Nenhuma refração!", cw/2, 30);
+            }
+        });
+    }
+
+    // Confetti Effect
+    function createConfetti() {
+        const colors = ['#00e5ff', '#2979ff', '#7c4dff', '#ffab00', '#ff3344'];
+        const container = document.getElementById('confettiContainer');
+        for (let i = 0; i < 80; i++) {
+            let conf = document.createElement('div');
+            conf.className = 'confetti';
+            conf.style.left = Math.random() * 100 + 'vw';
+            conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            conf.style.transform = `rotate(${Math.random() * 360}deg)`;
+            
+            let duration = Math.random() * 3 + 2;
+            let delay = Math.random() * 2;
+            
+            conf.animate([
+                { transform: `translateY(-10vh) rotate(0deg)`, opacity: 1 },
+                { transform: `translateY(110vh) rotate(${360 * Math.random() + 360}deg)`, opacity: 0 }
+            ], {
+                duration: duration * 1000,
+                delay: delay * 1000,
+                easing: 'cubic-bezier(.37,0,.63,1)',
+                fill: 'forwards'
+            });
+            container.appendChild(conf);
+        }
+    }
+    
+    // Slight delay for effect
+    setTimeout(createConfetti, 500);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Página 2 - Simulação de Refração da Luz e Reflexão Total">
+    <title>Página 2 — Refração da Luz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-deep: #050a18;
+            --bg-dark: #0a1628;
+            --surface: rgba(15, 30, 60, 0.6);
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-cyan: #00e5ff;
+            --accent-blue: #2979ff;
+            --accent-purple: #7c4dff;
+            --accent-amber: #ffab00;
+            --text-primary: #e8eaf6;
+            --text-secondary: #90a4ae;
+            --text-muted: #546e7a;
+            --tank-glass: rgba(255, 255, 255, 0.1);
+            --tank-water: rgba(0, 150, 255, 0.15);
+        }
+        html { font-size: 16px; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Animated Background */
+        .bg-scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+        .bg-orb {
+            position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.25;
+            animation: orbFloat 12s ease-in-out infinite alternate;
+        }
+        .bg-orb--1 { width: 500px; height: 500px; background: radial-gradient(circle, var(--accent-cyan), transparent 70%); top: -10%; left: -5%; animation-duration: 14s; }
+        .bg-orb--2 { width: 400px; height: 400px; background: radial-gradient(circle, var(--accent-purple), transparent 70%); bottom: -10%; right: -5%; animation-duration: 18s; animation-delay: -4s; }
+        .bg-orb--3 { width: 300px; height: 300px; background: radial-gradient(circle, var(--accent-blue), transparent 70%); top: 40%; left: 50%; animation-duration: 16s; animation-delay: -8s; }
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -20px) scale(1.1); }
+            100% { transform: translate(-20px, 30px) scale(0.95); }
+        }
+        .bg-grid {
+            position: absolute; inset: 0; z-index: 2;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* Header */
+        .header {
+            position: relative; z-index: 10; padding: 1.5rem 2rem;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(5, 10, 24, 0.8); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .header__back, .header__next {
+            color: var(--accent-cyan); text-decoration: none; font-weight: 600; font-size: 0.9rem;
+            padding: 8px 16px; border-radius: 8px; transition: background 0.2s;
+        }
+        .header__back:hover, .header__next:hover { background: rgba(0, 229, 255, 0.1); }
+        .header__next { background: var(--accent-cyan); color: var(--bg-deep); }
+        .header__next:hover { background: #00b8cc; }
+        .header__title {
+            font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* Layout */
+        .layout {
+            position: relative; z-index: 10; flex: 1;
+            display: flex; gap: 2rem; padding: 2rem; max-width: 1400px; margin: 0 auto; width: 100%;
+        }
+        .layout__canvas-container {
+            flex: 0 0 70%;
+            background: var(--surface); backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border); border-radius: 24px;
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            position: relative;
+        }
+        canvas {
+            max-width: 100%; height: auto; display: block; touch-action: none;
+        }
+        .layout__panel {
+            flex: 0 0 calc(30% - 2rem); display: flex; flex-direction: column; gap: 1.5rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--surface); backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border); border-radius: 24px;
+            padding: 1.5rem;
+        }
+        .card__title {
+            font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; font-weight: 700;
+            margin-bottom: 1rem; color: #fff; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem;
+        }
+        .info-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.8rem; font-size: 0.95rem; color: var(--text-secondary);
+        }
+        .info-row strong { color: var(--accent-cyan); font-weight: 600; font-size: 1.1rem; }
+        
+        .control-group { margin-top: 1.5rem; }
+        .control-group label { display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+        
+        /* Buttons and Inputs */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 12px 20px; border: none; border-radius: 12px; font-family: 'Inter', sans-serif;
+            font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-toggle {
+            background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid var(--glass-border); width: 100%;
+        }
+        .btn-toggle.active {
+            background: rgba(255, 51, 68, 0.15); border-color: #ff3344; color: #ff3344;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan)); color: #fff;
+        }
+        .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+        .instruction-text { font-size: 0.95rem; line-height: 1.5; color: var(--text-primary); }
+        .feedback-text { margin-top: 10px; font-size: 0.9rem; font-weight: 600; min-height: 20px; }
+
+        .input-row { display: flex; align-items: center; gap: 10px; }
+        .input-row label { flex: 1; font-size: 0.9rem; color: var(--text-secondary); }
+        .field__input {
+            width: 80px; background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: 8px; padding: 8px 12px; font-family: 'Inter', sans-serif;
+            color: #fff; outline: none; text-align: center;
+        }
+        .field__input:focus { border-color: var(--accent-cyan); background: rgba(0,229,255,0.05); }
+
+        @media (max-width: 900px) {
+            .layout { flex-direction: column; padding: 1rem; }
+            .header { padding: 1rem; }
+            .header__title { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-scene">
+    <div class="bg-orb bg-orb--1"></div>
+    <div class="bg-orb bg-orb--2"></div>
+    <div class="bg-orb bg-orb--3"></div>
+    <div class="bg-grid"></div>
+</div>
+
+<header class="header">
+    <a href="index.html" class="header__back">← Voltar</a>
+    <h1 class="header__title">Página 2 — Refração da Luz</h1>
+    <a href="pagina3.html" class="header__next" id="btnNext" style="display: none;">Próxima →</a>
+</header>
+
+<main class="layout">
+    <div class="layout__canvas-container">
+        <canvas id="simCanvas" width="900" height="580"></canvas>
+    </div>
+    
+    <aside class="layout__panel">
+        <div class="card">
+            <h2 class="card__title">Meios Ópticos</h2>
+            <div class="info-row">
+                <span>n (Ar):</span>
+                <strong>1,00</strong>
+            </div>
+            <div class="info-row">
+                <span>n (Água):</span>
+                <strong id="valNWater">--</strong>
+            </div>
+            
+            <div class="control-group">
+                <label>Laser Submerso</label>
+                <button id="btnLaserToggle" class="btn btn-toggle">Ligar Laser</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card__title">Desafio</h2>
+            <p id="instructionText" class="instruction-text">Ligue o laser e arraste-o para girar e observar o fenômeno da refração da luz.</p>
+            
+            <button id="btnStartChallenge" class="btn btn-primary" style="display:none; width: 100%; margin-top: 15px;">Começar Desafios</button>
+            
+            <div id="phase4Inputs" style="display:none; margin-top: 15px;">
+                <div class="input-row">
+                    <label>θᵢ (incidência):</label>
+                    <input type="number" id="inputThetaI" class="field__input" placeholder="graus">
+                </div>
+                <div class="input-row" style="margin-top: 10px;">
+                    <label>θᵣ (refração):</label>
+                    <input type="number" id="inputThetaR" class="field__input" placeholder="graus">
+                </div>
+                <button id="btnVerifyAngles" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Verificar</button>
+                <div id="verifyFeedback" class="feedback-text"></div>
+            </div>
+
+            <div id="phase5Feedback" class="feedback-text" style="display:none; margin-top: 15px; color: var(--accent-cyan);">
+                <p>Muito bem! Você completou os desafios desta página.</p>
+                <div id="snellFormula" style="margin-top: 10px; font-family: monospace; font-size: 1.1em; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; text-align: center;"></div>
+            </div>
+        </div>
+    </aside>
+</main>
+
+<script>
+    if (!localStorage.getItem('reflexaoTotal_aluno')) {
+        window.location.href = 'index.html';
+    }
+
+    function registrarErro(codigo) {
+        let erros = JSON.parse(localStorage.getItem('reflexaoTotal_erros') || '[]');
+        if (!erros.includes(codigo)) {
+            erros.push(codigo);
+            localStorage.setItem('reflexaoTotal_erros', JSON.stringify(erros));
+        }
+    }
+    // Constants & State
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Check student data
+    if (!localStorage.getItem('reflexaoTotal_aluno')) {
+        console.warn('Dados do aluno não encontrados. Volte ao início para registrar.');
+    }
+
+    // Physics constants
+    const nAir = 1.00;
+    // Random nWater between 1.20 and 1.40
+    const nWater = (Math.random() * 0.20 + 1.20).toFixed(2);
+    document.getElementById('valNWater').innerText = '?';
+
+
+    // Canvas layout constants
+    const cw = canvas.width;
+    const ch = canvas.height;
+    const surfaceY = ch * 0.45; // 261
+    const laserPivot = { x: 380, y: 440 };
+    const maxAngle = 65 * Math.PI / 180;
+
+    // Simulation state
+    let laserOn = false;
+    let laserAngle = 30 * Math.PI / 180; // starts at 30 deg
+    let phase = 0; // 0: explore, 1: normal, 2: angle I, 3: angle R, 4: protractor, 5: done
+    let hitX = 0;
+
+    // Interaction state
+    let isDraggingLaser = false;
+    let isDraggingNormal = false;
+    let isDraggingProt = false;
+    let isRotatingProt = false;
+
+    // Challenge state
+    let normalLineX = 0;
+    let normalLineCorrect = false;
+    let failedAttempts = 0;
+
+    // Protractor state
+    let prot = { x: 700, y: 150, angle: 0, radius: 110 };
+
+    // DOM Elements
+    const btnLaserToggle = document.getElementById('btnLaserToggle');
+    const instructionText = document.getElementById('instructionText');
+    const btnStartChallenge = document.getElementById('btnStartChallenge');
+    const phase4Inputs = document.getElementById('phase4Inputs');
+    const inputThetaI = document.getElementById('inputThetaI');
+    const inputThetaR = document.getElementById('inputThetaR');
+    const btnVerifyAngles = document.getElementById('btnVerifyAngles');
+    const verifyFeedback = document.getElementById('verifyFeedback');
+    const phase5Feedback = document.getElementById('phase5Feedback');
+    const btnNext = document.getElementById('btnNext');
+    const snellFormula = document.getElementById('snellFormula');
+
+    // Toggle Laser
+    btnLaserToggle.addEventListener('click', () => {
+        laserOn = !laserOn;
+        if (laserOn) {
+            btnLaserToggle.classList.add('active');
+            btnLaserToggle.innerText = 'Desligar Laser';
+            if (phase === 0) btnStartChallenge.style.display = 'block';
+        } else {
+            btnLaserToggle.classList.remove('active');
+            btnLaserToggle.innerText = 'Ligar Laser';
+        }
+    });
+
+    // Start Challenges
+    btnStartChallenge.addEventListener('click', () => {
+        btnStartChallenge.style.display = 'none';
+        phase = 1;
+        // Random refraction angle between 40 and 60
+        let targetDegR = Math.floor(Math.random() * 21) + 40;
+        let sinThetaI = (nAir / nWater) * Math.sin(targetDegR * Math.PI / 180);
+        // Calculate corresponding incidence angle
+        laserAngle = Math.asin(sinThetaI);
+        
+        laserOn = true;
+        btnLaserToggle.classList.add('active');
+        btnLaserToggle.innerText = 'Desligar Laser';
+        btnLaserToggle.disabled = true; // lock laser state
+
+        // Initialize normal line far from hitX
+        updatePhysics();
+        do {
+            normalLineX = Math.random() * (cw - 200) + 100;
+        } while (Math.abs(normalLineX - hitX) < 150);
+        
+        instructionText.innerText = "Fase 1: Arraste a reta normal (linha tracejada) até o exato ponto de incidência na superfície.";
+    });
+
+    // Verify Angles
+    btnVerifyAngles.addEventListener('click', () => {
+        let ti = parseFloat(inputThetaI.value);
+        let tr = parseFloat(inputThetaR.value);
+        if (isNaN(ti) || isNaN(tr)) {
+            showFeedback('Preencha ambos os valores.', '#ffab00');
+            return;
+        }
+        
+        let correctTi = laserAngle * 180 / Math.PI;
+        let correctTr = Math.asin(nWater * Math.sin(laserAngle) / nAir) * 180 / Math.PI;
+
+        let diffI = ti - correctTi;
+        let diffR = tr - correctTr;
+        
+        let okI = Math.abs(diffI) <= 1.5;
+        let okR = Math.abs(diffR) <= 1.5;
+
+        if (okI && okR) {
+            showFeedback('Correto! ✓', '#00e676');
+            phase = 5;
+            setTimeout(completeLesson, 1000);
+        } else {
+            failedAttempts++;
+            if (failedAttempts >= 4) {
+                inputThetaI.value = correctTi.toFixed(1);
+                inputThetaR.value = correctTr.toFixed(1);
+                showFeedback('Tentativas esgotadas. Valores corretos inseridos.', '#ffab00');
+                phase = 5;
+                setTimeout(completeLesson, 2000);
+            } else {
+                let hints = [];
+                if (!okI) {
+                    if (Math.abs(diffI) <= 2.5) {
+                        hints.push(`Para θᵢ, experimente tentar um valor um grau ${diffI > 0 ? 'menor' : 'maior'}!`);
+                    } else {
+                        hints.push(`θᵢ está incorreto`);
+                    }
+                }
+                if (!okR) {
+                    if (Math.abs(diffR) <= 2.5) {
+                        hints.push(`Para θᵣ, experimente tentar um valor um grau ${diffR > 0 ? 'menor' : 'maior'}!`);
+                    } else {
+                        hints.push(`θᵣ está incorreto`);
+                    }
+                }
+                showFeedback(`Incorreto. ${hints.join(' ')} (${4 - failedAttempts} tentativas restantes)`, '#ffab00');
+                registrarErro('err_medida');
+            }
+        }
+    });
+
+    function showFeedback(msg, color) {
+        verifyFeedback.innerText = msg;
+        verifyFeedback.style.color = color;
+    }
+
+    function completeLesson() {
+        instructionText.style.display = 'none';
+        phase4Inputs.style.display = 'none';
+        phase5Feedback.style.display = 'block';
+        btnNext.style.display = 'inline-block';
+        
+        let degI = (laserAngle * 180 / Math.PI).toFixed(1);
+        let degR = (Math.asin(nWater * Math.sin(laserAngle) / nAir) * 180 / Math.PI).toFixed(1);
+        snellFormula.innerHTML = `n₁ · sen(θᵢ) = n₂ · sen(θᵣ)<br><br>${nWater.toFixed(2)} · sen(${degI}°) = 1.00 · sen(${degR}°)`;
+        
+        localStorage.setItem('reflexaoTotal_p2_done', 'true');
+        document.getElementById('headerNext').style.display = 'block';
+        
+        // Save to localStorage for pagina 3
+        const experimentData = {
+            nWater: nWater,
+            degI: degI,
+            degR: degR
+        };
+        localStorage.setItem('reflexaoTotal_exp', JSON.stringify(experimentData));
+    }
+
+    function updatePhysics() {
+        let distY = laserPivot.y - surfaceY;
+        hitX = laserPivot.x + distY * Math.tan(laserAngle);
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, cw, ch);
+        updatePhysics();
+
+        // 1. Draw Background (Tank)
+        // Air
+        ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+        ctx.fillRect(0, 0, cw, surfaceY);
+        // Water
+        const waterGrad = ctx.createLinearGradient(0, surfaceY, 0, ch);
+        waterGrad.addColorStop(0, 'rgba(0, 150, 255, 0.25)');
+        waterGrad.addColorStop(1, 'rgba(0, 100, 255, 0.1)');
+        ctx.fillStyle = waterGrad;
+        ctx.fillRect(0, surfaceY, cw, ch - surfaceY);
+        
+        // Tank glass borders
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(10, 20); ctx.lineTo(10, ch - 10); ctx.lineTo(cw - 10, ch - 10); ctx.lineTo(cw - 10, 20);
+        ctx.stroke();
+
+        // Surface line
+        ctx.strokeStyle = 'rgba(0, 229, 255, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(10, surfaceY); ctx.lineTo(cw - 10, surfaceY);
+        ctx.stroke();
+
+        // Labels
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.font = '14px Inter';
+        ctx.fillText('AR (n = 1,00)', 25, surfaceY - 15);
+        ctx.fillText(`ÁGUA (n = ?)`, 25, surfaceY + 25);
+
+        // 2. Draw Sectors (Phases 2, 3, 4, 5)
+        if (phase >= 2 && normalLineCorrect) {
+            drawSectors();
+        }
+
+        // 3. Draw Normal Line (Phase >= 1)
+        if (phase >= 1) {
+            ctx.strokeStyle = normalLineCorrect ? '#00e676' : '#00e5ff';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 8]);
+            ctx.beginPath();
+            ctx.moveTo(normalLineX, 30);
+            ctx.lineTo(normalLineX, ch - 30);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Drag handle
+            if (!normalLineCorrect && phase === 1) {
+                ctx.fillStyle = 'rgba(0, 229, 255, 0.2)';
+                ctx.fillRect(normalLineX - 15, 30, 30, ch - 60);
+            }
+        }
+
+        // 4. Draw Laser Rays
+        if (laserOn) {
+            drawRays();
+        }
+
+        // 5. Draw Laser Device
+        drawLaserDevice();
+
+        // 6. Draw Protractor (Phase >= 4)
+        if (phase >= 4) {
+            drawProtractor();
+        }
+
+        requestAnimationFrame(render);
+    }
+
+    function drawRays() {
+        // Incident Ray
+        ctx.beginPath();
+        ctx.moveTo(laserPivot.x, laserPivot.y);
+        ctx.lineTo(hitX, surfaceY);
+        ctx.strokeStyle = '#ff3344';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#ff3344';
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+
+        // Hit point glow
+        ctx.beginPath();
+        ctx.arc(hitX, surfaceY, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+
+        // Refraction / Reflection
+        let sinTr = (nWater / nAir) * Math.sin(laserAngle);
+        if (Math.abs(sinTr) > 1) {
+            // Total Internal Reflection
+            ctx.beginPath();
+            ctx.moveTo(hitX, surfaceY);
+            let reflectX = hitX + (hitX - laserPivot.x); // symmetrical
+            let reflectY = laserPivot.y; // symmetrical
+            // Extend ray to bottom
+            let extY = ch;
+            let extX = hitX + (ch - surfaceY) * Math.tan(laserAngle);
+            ctx.lineTo(extX, extY);
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffab00';
+            ctx.font = 'bold 16px Inter';
+            ctx.fillText("Reflexão Total!", hitX + 15, surfaceY + 30);
+        } else {
+            // Refraction
+            let thetaR = Math.asin(sinTr); // will be same sign as laserAngle
+            ctx.beginPath();
+            ctx.moveTo(hitX, surfaceY);
+            let extY = 0;
+            let extX = hitX + (surfaceY - extY) * Math.tan(thetaR);
+            ctx.lineTo(extX, extY);
+            ctx.stroke();
+            
+            // Partial Reflection
+            let extRefY = ch;
+            let extRefX = hitX + (ch - surfaceY) * Math.tan(laserAngle);
+            
+            ctx.beginPath();
+            ctx.moveTo(hitX, surfaceY);
+            ctx.lineTo(extRefX, extRefY);
+            ctx.strokeStyle = 'rgba(255, 51, 68, 0.25)'; // faint red
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)'; // faint text
+            ctx.font = '12px Inter';
+            ctx.textAlign = 'center';
+            let textY = ch - 25;
+            let textX = hitX + (textY - surfaceY) * Math.tan(laserAngle);
+            ctx.fillText("Reflexão parcial", textX, textY);
+            
+            ctx.strokeStyle = '#ff3344'; // restore
+        }
+        ctx.shadowBlur = 0;
+    }
+
+    function drawLaserDevice() {
+        ctx.save();
+        ctx.translate(laserPivot.x, laserPivot.y);
+        // laserAngle > 0 means tilt right (positive X).
+        // Standard rotation: 0 is X axis. We want 0 to be UP (-Y).
+        // So rotate by laserAngle, and draw downwards for the body.
+        ctx.rotate(laserAngle);
+        
+        // Body (extends down)
+        ctx.fillStyle = '#222';
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(-12, 0, 24, 70, 8);
+        ctx.fill();
+        ctx.stroke();
+
+        // Grip lines
+        ctx.strokeStyle = '#444';
+        for(let i=20; i<60; i+=8) {
+            ctx.beginPath(); ctx.moveTo(-8, i); ctx.lineTo(8, i); ctx.stroke();
+        }
+
+        // Indicator LED
+        ctx.fillStyle = laserOn ? '#00e676' : '#555';
+        ctx.shadowColor = laserOn ? '#00e676' : 'transparent';
+        ctx.shadowBlur = laserOn ? 8 : 0;
+        ctx.beginPath();
+        ctx.arc(0, 60, 3, 0, Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Emission Lens (at pivot)
+        ctx.fillStyle = '#111';
+        ctx.beginPath();
+        ctx.arc(0, 0, 8, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = laserOn ? '#ff3344' : '#555';
+        ctx.beginPath();
+        ctx.arc(0, 0, 4, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    function drawSectors() {
+        const r = 55;
+        let tI = Math.abs(laserAngle);
+        let tR = Math.asin((nWater / nAir) * Math.sin(tI));
+
+        // Note: we forced laserAngle > 0, so ray comes from bottom-left and refracts top-right
+        
+        ctx.save();
+        ctx.translate(hitX, surfaceY);
+        
+        // Helper to draw text
+        const drawLabel = (ang, text) => {
+            let lx = (r * 0.65) * Math.cos(ang);
+            let ly = (r * 0.65) * Math.sin(ang);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 16px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, lx, ly);
+        };
+
+        // Sector A: Incidence (from PI/2 to PI/2 + tI)
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.arc(0, 0, r, Math.PI/2, Math.PI/2 + tI);
+        ctx.fillStyle = (phase === 3 || phase === 4 || phase === 5) ? 'rgba(255, 200, 0, 0.4)' : 'rgba(255, 200, 0, 0.25)';
+        ctx.fill();
+        if (phase >= 3) {
+            ctx.strokeStyle = '#00e676';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        drawLabel(Math.PI/2 + tI/2, phase >= 3 ? 'î' : 'A');
+
+        // Sector B: Complement (PI/2 + tI to PI)
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.arc(0, 0, r, Math.PI/2 + tI, Math.PI);
+        ctx.fillStyle = 'rgba(0, 200, 100, 0.25)';
+        ctx.fill();
+        if (phase < 4) drawLabel(Math.PI/2 + tI + (Math.PI/2 - tI)/2, 'B');
+
+        // Sector C: Refraction (-PI/2 to -PI/2 + tR)
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.arc(0, 0, r, -Math.PI/2, -Math.PI/2 + tR);
+        ctx.fillStyle = (phase === 4 || phase === 5) ? 'rgba(0, 150, 255, 0.4)' : 'rgba(0, 150, 255, 0.25)';
+        ctx.fill();
+        if (phase >= 4) {
+            ctx.strokeStyle = '#00e676';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        drawLabel(-Math.PI/2 + tR/2, phase >= 4 ? 'r̂' : 'C');
+
+        // Sector D: Complement (-PI/2 + tR to 0)
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.arc(0, 0, r, -Math.PI/2 + tR, 0);
+        ctx.fillStyle = 'rgba(200, 0, 255, 0.25)';
+        ctx.fill();
+        if (phase < 4) drawLabel(-Math.PI/2 + tR + (Math.PI/2 - tR)/2, 'D');
+
+        ctx.restore();
+    }
+
+    function drawProtractor() {
+        ctx.save();
+        ctx.translate(prot.x, prot.y);
+        ctx.rotate(prot.angle);
+
+        // Body
+        ctx.beginPath();
+        ctx.arc(0, 0, prot.radius, Math.PI, 0);
+        ctx.lineTo(0,0);
+        ctx.fillStyle = 'rgba(255, 255, 200, 0.12)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Ticks
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        for(let i=0; i<=180; i++) {
+            let ang = Math.PI + i * Math.PI / 180;
+            let len = (i % 10 === 0) ? 14 : (i % 5 === 0) ? 8 : 4;
+            let x1 = (prot.radius - len) * Math.cos(ang);
+            let y1 = (prot.radius - len) * Math.sin(ang);
+            let x2 = prot.radius * Math.cos(ang);
+            let y2 = prot.radius * Math.sin(ang);
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            if (i % 10 === 0 && i > 0 && i < 180) {
+                // outer text
+                let tx1 = (prot.radius - 22) * Math.cos(ang);
+                let ty1 = (prot.radius - 22) * Math.sin(ang);
+                ctx.font = '9px Inter';
+                ctx.fillText(i.toString(), tx1, ty1);
+                
+                // inner text
+                let tx2 = (prot.radius - 35) * Math.cos(ang);
+                let ty2 = (prot.radius - 35) * Math.sin(ang);
+                ctx.font = '8px Inter';
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.fillText((180-i).toString(), tx2, ty2);
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            }
+        }
+
+        // Center crosshair
+        ctx.strokeStyle = '#ff3344';
+        ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(10, 0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(0, 0); ctx.stroke();
+
+        // Rotation Handle (Right edge of baseline)
+        ctx.beginPath();
+        ctx.arc(prot.radius, 0, 8, 0, Math.PI*2);
+        ctx.fillStyle = '#00e5ff';
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    // --- Interaction Handling ---
+    function getMousePos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+            x: (clientX - rect.left) * (canvas.width / rect.width),
+            y: (clientY - rect.top) * (canvas.height / rect.height)
+        };
+    }
+
+    function onDown(e) {
+        e.preventDefault();
+        const pos = getMousePos(e);
+        
+        // 1. Protractor interaction (Highest priority)
+        if (phase >= 4) {
+            // Check rotation handle
+            let hx = prot.x + prot.radius * Math.cos(prot.angle);
+            let hy = prot.y + prot.radius * Math.sin(prot.angle);
+            if (Math.hypot(pos.x - hx, pos.y - hy) < 20) {
+                isRotatingProt = true;
+                return;
+            }
+            // Check body drag
+            let dx = pos.x - prot.x;
+            let dy = pos.y - prot.y;
+            let dist = Math.hypot(dx, dy);
+            let ang = Math.atan2(dy, dx) - prot.angle;
+            // Normalize ang to -PI to PI
+            while(ang > Math.PI) ang -= 2*Math.PI;
+            while(ang < -Math.PI) ang += 2*Math.PI;
+            // Protractor body is drawn from PI to 0 (which is upper half if angle=0)
+            if (dist < prot.radius && ang < 0 && ang > -Math.PI) {
+                isDraggingProt = true;
+                return;
+            }
+        }
+
+        // 2. Sectors interaction (Phase 2 & 3)
+        if ((phase === 2 || phase === 3) && normalLineCorrect) {
+            let dx = pos.x - hitX;
+            let dy = pos.y - surfaceY;
+            if (Math.hypot(dx, dy) <= 55) { // radius r = 55
+                let ang = Math.atan2(dy, dx); // -PI to PI
+                let tI = Math.abs(laserAngle);
+                let tR = Math.asin((nWater / nAir) * Math.sin(tI));
+                
+                // Identify sector based on angle
+                let sector = null;
+                if (ang >= Math.PI/2 && ang <= Math.PI/2 + tI) sector = 'A';
+                else if (ang > Math.PI/2 + tI && ang <= Math.PI) sector = 'B';
+                else if (ang >= -Math.PI/2 && ang <= -Math.PI/2 + tR) sector = 'C';
+                else if (ang > -Math.PI/2 + tR && ang <= 0) sector = 'D';
+
+                if (phase === 2) {
+                    if (sector === 'A') {
+                        phase = 3;
+                        instructionText.innerHTML = "<span style='color:#00e676'>Correto! ✓</span> Agora clique na região do <strong>ângulo de refração (θᵣ)</strong>.";
+                    } else {
+                        let prev = instructionText.innerText;
+                        instructionText.innerHTML = "<span style='color:#ff3344'>Tente novamente.</span>";
+                        setTimeout(() => instructionText.innerText = prev, 1500);
+                        registrarErro('err_setores');
+                    }
+                } else if (phase === 3) {
+                    if (sector === 'C') {
+                        phase = 4;
+                        instructionText.innerHTML = "Correto! ✓ Use o transferidor para medir θᵢ e θᵣ. Insira os valores ao lado.";
+                        phase4Inputs.style.display = 'block';
+                    } else {
+                        let prev = instructionText.innerText;
+                        instructionText.innerHTML = "<span style='color:#ff3344'>Tente novamente.</span>";
+                        setTimeout(() => instructionText.innerText = prev, 1500);
+                        registrarErro('err_setores');
+                    }
+                }
+                return;
+            }
+        }
+
+        // 3. Normal line drag (Phase 1)
+        if (phase === 1 && !normalLineCorrect) {
+            if (Math.abs(pos.x - normalLineX) < 30) {
+                isDraggingNormal = true;
+                return;
+            }
+        }
+
+        // 4. Laser rotate (Phase 0)
+        if (phase === 0) {
+            // Allow drag if clicking anywhere in the water
+            if (pos.y > surfaceY) {
+                isDraggingLaser = true;
+                updateLaserAngle(pos);
+            }
+        }
+    }
+
+    function onMove(e) {
+        if (!isDraggingLaser && !isDraggingNormal && !isDraggingProt && !isRotatingProt) return;
+        e.preventDefault();
+        const pos = getMousePos(e);
+
+        if (isDraggingLaser) {
+            updateLaserAngle(pos);
+        } else if (isDraggingNormal) {
+            normalLineX = pos.x;
+            if (Math.abs(normalLineX - hitX) <= 15) {
+                normalLineX = hitX;
+                normalLineCorrect = true;
+                isDraggingNormal = false;
+                phase = 2;
+                instructionText.innerHTML = "<span style='color:#00e676'>Correto! ✓</span> A reta normal é perpendicular à superfície. Agora, <strong>clique na região que representa o ângulo de incidência (θᵢ)</strong>.";
+            }
+        } else if (isDraggingProt) {
+            prot.x = pos.x;
+            prot.y = pos.y;
+            // Magnetic attraction to incidence point
+            if (Math.hypot(prot.x - hitX, prot.y - surfaceY) < 30) {
+                prot.x = hitX;
+                prot.y = surfaceY;
+            }
+        } else if (isRotatingProt) {
+            let a = Math.atan2(pos.y - prot.y, pos.x - prot.x);
+            // Snapping logic if protractor is at incidence point
+            if (prot.x === hitX && prot.y === surfaceY) {
+                let snapAngles = [0, Math.PI, -Math.PI]; // Surface
+                snapAngles.push(Math.PI / 2, -Math.PI / 2); // Normal line
+                
+                // Incident ray angle
+                let incAng = Math.atan2(laserPivot.y - surfaceY, laserPivot.x - hitX);
+                snapAngles.push(incAng);
+                snapAngles.push(incAng > 0 ? incAng - Math.PI : incAng + Math.PI);
+                
+                // Refracted ray angle
+                let sinTr = (nWater / nAir) * Math.sin(laserAngle);
+                if (Math.abs(sinTr) <= 1) {
+                    let thetaR = Math.asin(sinTr); // goes UP from hitX
+                    let rx = surfaceY * Math.tan(thetaR);
+                    let ry = -surfaceY;
+                    let rAng = Math.atan2(ry, rx);
+                    snapAngles.push(rAng);
+                    snapAngles.push(rAng > 0 ? rAng - Math.PI : rAng + Math.PI);
+                }
+
+                for (let sa of snapAngles) {
+                    let diff = Math.abs(a - sa);
+                    if (diff > Math.PI) diff = 2 * Math.PI - diff;
+                    if (diff < 0.08) { // ~4.5 degrees snapping
+                        a = sa;
+                        break;
+                    }
+                }
+            }
+            prot.angle = a;
+        }
+    }
+
+    function onUp(e) {
+        isDraggingLaser = false;
+        isDraggingNormal = false;
+        isDraggingProt = false;
+        isRotatingProt = false;
+    }
+
+    function updateLaserAngle(pos) {
+        let dx = pos.x - laserPivot.x;
+        let dy = laserPivot.y - pos.y; // invert Y so up is positive for atan2
+        // Laser points UP towards surface. We want angle from vertical.
+        // If pointing straight up (dx=0, dy>0), angle should be 0.
+        // atan2(dx, dy) gives 0 for straight up, positive for right tilt.
+        let newAngle = Math.atan2(dx, dy);
+        // Clamp
+        if (newAngle > maxAngle) newAngle = maxAngle;
+        if (newAngle < -maxAngle) newAngle = -maxAngle;
+        laserAngle = newAngle;
+    }
+
+    canvas.addEventListener('mousedown', onDown);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    
+    canvas.addEventListener('touchstart', onDown, {passive: false});
+    window.addEventListener('touchmove', onMove, {passive: false});
+    window.addEventListener('touchend', onUp);
+
+    // Start render loop
+    requestAnimationFrame(render);
+</script>
+
+</body>
+</html>
