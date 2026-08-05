@@ -218,7 +218,7 @@
 
 <script>
     if (!localStorage.getItem('reflexaoTotal_aluno')) {
-        window.location.href = 'index.html';
+        console.warn('Redirecionamento evitado');
     }
 
     function registrarErro(codigo) {

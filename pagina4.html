@@ -222,7 +222,7 @@
 
 <script>
     if (!localStorage.getItem('reflexaoTotal_p3_done')) {
-        window.location.href = 'pagina3.html';
+        console.warn('Redirecionamento evitado');
     }
 
     function registrarErro(codigo) {
