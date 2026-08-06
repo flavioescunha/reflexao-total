@@ -190,6 +190,17 @@
 
     const triggeredGroups = new Set();
 
+    // Load student experiment data for math developments
+    const expDataStr = localStorage.getItem('reflexaoTotal_exp');
+    let nWater = '?', degI = '?', degR = '?', limitAngle = '?';
+    if (expDataStr) {
+        const expData = JSON.parse(expDataStr);
+        nWater = parseFloat(expData.nWater).toFixed(2);
+        degI = parseFloat(expData.degI).toFixed(1);
+        degR = parseFloat(expData.degR).toFixed(1);
+        limitAngle = (Math.asin(1.00 / expData.nWater) * 180 / Math.PI).toFixed(1);
+    }
+
     // Load Errors
     const errosStr = localStorage.getItem('reflexaoTotal_erros');
     if (errosStr) {
@@ -197,12 +208,33 @@
         if (errosList.length > 0) {
             const ul = document.getElementById('errorList');
             let hasValidErrors = false;
+            let mathDrawn = { snell: false, limit: false };
             
             errosList.forEach(codigo => {
                 if (conceptsMap[codigo]) {
                     hasValidErrors = true;
                     let li = document.createElement('li');
-                    li.innerText = conceptsMap[codigo];
+                    li.innerHTML = conceptsMap[codigo];
+                    
+                    if ((codigo === 'err_lei_snell' || codigo === 'err_calculo_n') && !mathDrawn.snell) {
+                        mathDrawn.snell = true;
+                        li.innerHTML += `<div style="background: rgba(0,0,0,0.3); padding: 12px; margin-top: 8px; border-radius: 6px; font-family: monospace; border-left: 3px solid #ffab00; font-size: 1.05em;">
+                            <strong>Desenvolvimento Matemático (Copie):</strong><br><br>
+                            n₁ · sen(θᵢ) = n₂ · sen(θᵣ)<br>
+                            ${nWater} · sen(${degI}°) = 1,00 · sen(${degR}°)
+                        </div>`;
+                    }
+                    
+                    if (codigo.startsWith('err_pag5_') && !mathDrawn.limit) {
+                        mathDrawn.limit = true;
+                        li.innerHTML += `<div style="background: rgba(0,0,0,0.3); padding: 12px; margin-top: 8px; border-radius: 6px; font-family: monospace; border-left: 3px solid #00e5ff; font-size: 1.05em;">
+                            <strong>Desenvolvimento Matemático (Copie):</strong><br><br>
+                            sen(L) = n₂ / n₁<br>
+                            sen(L) = 1,00 / ${nWater}<br>
+                            L = sen⁻¹(1,00 / ${nWater}) = ${limitAngle}°
+                        </div>`;
+                    }
+
                     ul.appendChild(li);
                     
                     if (imageGroups[codigo]) triggeredGroups.add(imageGroups[codigo]);
