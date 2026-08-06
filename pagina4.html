@@ -392,6 +392,21 @@
                 // Refraction exactly 90 degrees (sliding on surface)
                 ctx.beginPath(); ctx.moveTo(hitX, surfaceY); ctx.lineTo(cw - 10, surfaceY); // straight right
                 ctx.strokeStyle = '#ff3344'; ctx.lineWidth = 4; ctx.stroke();
+                
+                // Draw 90 degree symbol
+                let size = 20;
+                ctx.beginPath();
+                ctx.moveTo(hitX, surfaceY - size);
+                ctx.lineTo(hitX + size, surfaceY - size);
+                ctx.lineTo(hitX + size, surfaceY);
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(hitX + size / 2, surfaceY - size / 2, 2, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+                ctx.font = '14px Inter'; ctx.textAlign = 'center';
+                ctx.fillText('r̂ = 90°', hitX + 45, surfaceY - 30);
             } else {
                 // Reflected ray (Total Reflection)
                 ctx.beginPath(); ctx.moveTo(hitX, surfaceY);
@@ -407,6 +422,16 @@
             ctx.beginPath(); ctx.moveTo(hitX, surfaceY);
             let extY = 0; let extX = hitX + surfaceY * Math.tan(thetaR); // angle to the right of normal
             ctx.lineTo(extX, extY); ctx.strokeStyle = '#ff3344'; ctx.lineWidth = 3; ctx.stroke();
+            
+            // Draw normal arc
+            ctx.beginPath();
+            ctx.arc(hitX, surfaceY, 35, -Math.PI / 2, -Math.PI / 2 + thetaR);
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.fillStyle = '#fff'; ctx.font = '14px Inter'; ctx.textAlign = 'center';
+            let labelX = hitX + 50 * Math.cos(-Math.PI / 2 + thetaR / 2);
+            let labelY = surfaceY + 50 * Math.sin(-Math.PI / 2 + thetaR / 2);
+            ctx.fillText('r̂', labelX, labelY);
 
             // Partial Reflection
             let refY = ch; let refX = hitX + (ch - surfaceY) * Math.tan(laserAngle);
